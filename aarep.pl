@@ -11,9 +11,9 @@ binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 
 my $unit_time = "all";
-# y:year, ym:month, ymd:day, w:dow, h:hour, hm:hour-min, all:all
+# y:year, ym:month, ymd:day, w:dow, h:hour, hm:hour-min, hms, wh, all:all
 my $mode = ""; 
-# "":count, i:item, t:trackingid, :sstore, d:device"
+# "":count, i:item, t:trackingid, s:store, d:device"
 
 GetOptions(
     "unit=s" => \$unit_time,
