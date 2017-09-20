@@ -11,13 +11,18 @@ binmode STDIN, ":utf8";
 binmode STDOUT, ":utf8";
 
 my $unit_time = "all";
-# y:year, ym:month, ymd:day, w:dow, h:hour, hm:hour-min, hms, wh, all:all
+# y:year, ym:month, ymd:day, w:dow, h:hour,
+# hm:hour-min, hms:hour-min-sec,
+# ymdh, ymdhm, ymdhms, wh, all:all
 my $mode = ""; 
 # "":count, i:item, t:trackingid, s:store, d:device"
+my $date = "";
+# 日付（年、年月、年月日）の指定： -date "2017-09-10", -date "2017-09-(1[5-9]|20)"
 
 GetOptions(
     "unit=s" => \$unit_time,
     "mode=s" => \$mode,
+    "date=s" => \$date,
     );
 
 my @mode_ids = map {
@@ -54,6 +59,7 @@ while (<>) {
     } else {
 	die "bad report type [$report_type]";
     }
+    next if $date and "$y-$m-$d" !~ /^$date/;
     my $dow = (localtime timelocal(0,0,0,$d,$m-1,$y))[6];
     my $str = $unit_time eq "ymd" ? "$y-$m-$d"
 	: $unit_time eq "ym" ? "$y-$m"
@@ -63,7 +69,9 @@ while (<>) {
 	: $unit_time eq "h" ? "$H"
 	: $unit_time eq "hm" ? "$H:$M"
 	: $unit_time eq "hms" ? "$H:$M:$S"
-	: $unit_time eq "ymdh" ? "$y-$m-$d-$H"
+	: $unit_time eq "ymdh" ? "$y-$m-$d $H"
+	: $unit_time eq "ymdhm" ? "$y-$m-$d $H:$M"
+	: $unit_time eq "ymdhms" ? "$y-$m-$d $H:$M:$S"
 	: "all";
     my $keys = join("\t", map {$h{$_}} @mode_ids);
     if ($report_type eq "e") {

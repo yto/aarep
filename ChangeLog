@@ -1,3 +1,16 @@
+2017-09-20  Tatsuwo  <yto at example.com>
+
+	* aarep.pl: add command line optiton "--date"
+	日付（年、年月、年月日）の指定を行う。
+	例：
+	--date "2017-09"
+	--date "2017-09-10"
+	--date "2017-09-(1[5-9]|20)"
+
+2017-09-06  Tatsuwo  <yto at example.com>
+
+	* aarep.pl: add "ymdhm", "ymdhms"
+
 2017-08-15  Tatsuwo  <yto at example.com>
 
 	* conv-aarep-old2new.pl: add
