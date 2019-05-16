@@ -30,6 +30,7 @@ my @mode_ids = map {
 	: /^s/ ? "ストア"
 	: /^i/ ? "ASIN"
 	: /^d/ ? "デバイスの種類"
+	: /^n/ ? "商品リンク経由" # only "o"
 	: ""
 } split(/,/, $mode);
 
@@ -38,8 +39,11 @@ my $sep = ",";
 
 my @labels;
 my %stat;
+my %line_seen;
 while (<>) {
     chomp;
+    next if defined $line_seen{$_};
+    $line_seen{$_} = 1;
     if (/^Fee-(.).+? reports from/) {
 	$report_type = lc($1); # "e" or "o"
 	next;
@@ -53,7 +57,12 @@ while (<>) {
     my %h = map {$labels[$_] => $c[$_]} 0..$#c;
     my ($y, $m, $d, $H, $M, $S);
     if ($report_type eq "e") {
-	($y, $m, $d) = $h{発送日} =~ /^(\d{4})-(\d{2})-(\d{2})/;
+#	($y, $m, $d) = $h{発送日} =~ /^(\d+)-(\d+)-(\d+)/;
+	my $_hms;
+	($y, $m, $d, $_hms, $H, $M, $S) = $h{発送日} =~ /^(\d+)-(\d+)-(\d+)( (\d+):(\d+):(\d+))?/;
+	$H ||= 0;
+	$M ||= 0;
+	$S ||= 0;
     } elsif ($report_type eq "o") {
 	($y, $m, $d, $H, $M, $S) = $h{日付} =~ /^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)/;
     } else {
@@ -75,10 +84,16 @@ while (<>) {
 	: "all";
     my $keys = join("\t", map {$h{$_}} @mode_ids);
     if ($report_type eq "e") {
+	my $num = $h{発送済み商品} - ($h{返品済み商品}||0);
+	if (defined $h{売上}) {
+	    $stat{$unit_time}{$str}{$keys}{Gross} += $h{売上};
+	} else {
+	    $stat{$unit_time}{$str}{$keys}{Gross} += $h{価格} * $num;
+	}
 	$stat{$unit_time}{$str}{$keys}{Income} += $h{紹介料};
-	$stat{$unit_time}{$str}{$keys}{Num} += $h{発送済み商品} - ($h{返品済み商品}||0);
+	$stat{$unit_time}{$str}{$keys}{Num} += $num;
     } elsif ($report_type eq "o") {
-	$stat{$unit_time}{$str}{$keys}{Income} += $h{価格};
+	$stat{$unit_time}{$str}{$keys}{Gross} += $h{価格} * $h{数量};
 	$stat{$unit_time}{$str}{$keys}{Num} += $h{数量};
     }
     $stat{$unit_time}{$str}{$keys}{Name} = $h{商品名};
@@ -94,11 +109,12 @@ foreach my $t (sort keys %{$stat{$unit_time}}) {
 #	push @info, (qw(Sun Mon Tue Wed Thu Fri Sat))[$i] 
 
 	push @info, $r->{$i}{Num};
-	push @info, $r->{$i}{Income};
+	push @info, $r->{$i}{Income} if $report_type eq "e";
+	push @info, $r->{$i}{Gross};
 	if (grep {/^ASIN/} @mode_ids) {
 	    push @info, $r->{$i}{Name};
 	} else {
-	    my $tanka = $r->{$i}{Num} ? $r->{$i}{Income}/$r->{$i}{Num} : 0;
+#	    my $tanka = $r->{$i}{Num} ? $r->{$i}{Income}/$r->{$i}{Num} : 0;
 #	    push @info, int($tanka*100)/100;
 	}
 	push @res, \@info;
