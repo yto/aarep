@@ -42,8 +42,6 @@ my %stat;
 my %line_seen;
 while (<>) {
     chomp;
-    next if defined $line_seen{$_};
-    $line_seen{$_} = 1;
     if (/^Fee-(.).+? reports from/) {
 	$report_type = lc($1); # "e" or "o"
 	next;
@@ -51,6 +49,8 @@ while (<>) {
 	@labels = map {s/\(.+?\)$//; s/\s+$//; $_} split($sep, $_);
 	next;
     }
+    next if defined $line_seen{$_};
+    $line_seen{$_} = 1;
     my @c = split($sep, $_);
     #    next if @c < 11 or $c[4] !~ /-22$/;
     next if @c <= 1;

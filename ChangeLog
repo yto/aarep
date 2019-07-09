@@ -1,3 +1,8 @@
+2019-07-08  Tatsuwo  <yto at example.com>
+
+	* aarep.pl: エラー対処。
+	line_seen のチェックをヘッダ認識部分より後にした。
+
 2017-09-20  Tatsuwo  <yto at example.com>
 
 	* aarep.pl: add command line optiton "--date"
